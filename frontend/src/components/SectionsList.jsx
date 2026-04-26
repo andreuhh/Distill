@@ -4,7 +4,7 @@ export default function SectionsList({ sections, onJump, activeIndex }) {
     <div className="space-y-6">
       {sections.map((s) => (
         <article
-          id={`sezione-${s.index}`}
+          id={`section-${s.index}`}
           key={s.index}
           className={
             'bg-white rounded-lg border p-5 transition-colors ' +

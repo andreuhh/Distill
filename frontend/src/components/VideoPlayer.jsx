@@ -1,14 +1,14 @@
 import { forwardRef, useEffect, useRef } from 'react'
 
 /**
- * Player YouTube basato su IFrame API.
- * Espone un ref con .seekTo(seconds) per saltare al timestamp della sezione.
+ * YouTube player based on the IFrame API.
+ * Exposes a ref with .seekTo(seconds) to jump to a section's timestamp.
  */
 const VideoPlayer = forwardRef(function VideoPlayer({ videoId }, ref) {
   const containerRef = useRef(null)
   const playerRef = useRef(null)
 
-  // Carica script IFrame API una volta sola
+  // Load IFrame API script only once
   useEffect(() => {
     if (window.YT && window.YT.Player) return
     const tag = document.createElement('script')
@@ -16,7 +16,7 @@ const VideoPlayer = forwardRef(function VideoPlayer({ videoId }, ref) {
     document.body.appendChild(tag)
   }, [])
 
-  // Crea il player quando videoId cambia
+  // Create the player when videoId changes
   useEffect(() => {
     if (!videoId) return
 
@@ -32,7 +32,7 @@ const VideoPlayer = forwardRef(function VideoPlayer({ videoId }, ref) {
     if (window.YT && window.YT.Player) {
       create()
     } else {
-      // Aspetta il callback globale dell'API
+      // Wait for the global API callback
       const prev = window.onYouTubeIframeAPIReady
       window.onYouTubeIframeAPIReady = () => {
         prev && prev()
@@ -48,7 +48,7 @@ const VideoPlayer = forwardRef(function VideoPlayer({ videoId }, ref) {
     }
   }, [videoId])
 
-  // Espone al parent una API imperativa minimal
+  // Expose a minimal imperative API to the parent
   if (ref) {
     ref.current = {
       seekTo: (seconds) => {

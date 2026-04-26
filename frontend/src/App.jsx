@@ -21,7 +21,7 @@ export default function App() {
       const data = await processVideo(url)
       setResult(data)
     } catch (e) {
-      setError(e.message || 'Errore')
+      setError(e.message || 'Error')
       setResult(null)
     } finally {
       setLoading(false)
@@ -33,8 +33,8 @@ export default function App() {
     if (playerRef.current && playerRef.current.seekTo) {
       playerRef.current.seekTo(section.start_seconds)
     }
-    // Scroll-into-view dell'articolo
-    const el = document.getElementById(`sezione-${section.index}`)
+    // Scroll article into view
+    const el = document.getElementById(`section-${section.index}`)
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
@@ -44,7 +44,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold text-slate-900">Distill</h1>
           <p className="text-sm text-slate-500">
-            Trasforma un video in trascrizione strutturata con titoli e timestamp
+            Transform a video into a structured transcript with titles and timestamps
           </p>
         </div>
       </header>
@@ -60,13 +60,13 @@ export default function App() {
 
         {loading && (
           <div className="bg-white rounded-lg border border-slate-200 p-6 text-slate-500">
-            Sto estraendo la trascrizione e generando le sezioni. Puo' richiedere 10-60 secondi…
+            Extracting the transcript and generating sections. This may take 10–60 seconds…
           </div>
         )}
 
         {result && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Colonna sinistra: TOC */}
+            {/* Left column: TOC */}
             <aside className="md:col-span-1">
               <TOC
                 sections={result.sections}
@@ -75,14 +75,14 @@ export default function App() {
               />
             </aside>
 
-            {/* Colonna destra: player + sezioni */}
+            {/* Right column: player + sections */}
             <section className="md:col-span-2 space-y-4">
               <VideoPlayer ref={playerRef} videoId={result.video.video_id} />
               <div className="text-xs text-slate-500">
-                Sorgente trascrizione: <code>{result.video.transcript_source}</code>
-                {' — '}lingua: <code>{result.video.language}</code>
-                {' — '}durata: {Math.round(result.video.total_duration_seconds)}s
-                {' — '}{result.sections.length} sezioni
+                Transcript source: <code>{result.video.transcript_source}</code>
+                {' — '}language: <code>{result.video.language}</code>
+                {' — '}duration: {Math.round(result.video.total_duration_seconds)}s
+                {' — '}{result.sections.length} sections
               </div>
               <SectionsList
                 sections={result.sections}

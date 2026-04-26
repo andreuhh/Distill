@@ -1,6 +1,6 @@
-"""CLI entrypoint — usa la stessa pipeline dell'API, senza server web.
+"""CLI entrypoint — uses the same pipeline as the API, without a web server.
 
-Esempi:
+Examples:
     python cli.py "https://www.youtube.com/watch?v=_o4KusDr-Kg"
     python cli.py "<url>" --out out.json
     python cli.py "<url>" --format markdown --out out.md
@@ -16,24 +16,24 @@ from app.pipeline import run_pipeline
 
 
 def to_markdown(result) -> str:
-    """Rende il ProcessResult in Markdown, come da esempio della traccia."""
+    """Render the ProcessResult as Markdown, matching the assignment example."""
     lines = [
-        f"# Trascrizione del video {result.video.video_id}",
+        f"# Transcript of video {result.video.video_id}",
         "",
         f"- URL: {result.video.url}",
-        f"- Lingua: {result.video.language}",
-        f"- Fonte trascrizione: {result.video.transcript_source}",
-        f"- Durata totale: {int(result.video.total_duration_seconds)}s",
+        f"- Language: {result.video.language}",
+        f"- Transcript source: {result.video.transcript_source}",
+        f"- Total duration: {int(result.video.total_duration_seconds)}s",
         "",
-        "## Indice",
+        "## Table of Contents",
         "",
     ]
     for s in result.sections:
-        anchor = f"sezione-{s.index}"
+        anchor = f"section-{s.index}"
         lines.append(f"- [{s.start_timestamp} — {s.title}](#{anchor})")
     lines.append("")
     for s in result.sections:
-        anchor = f"sezione-{s.index}"
+        anchor = f"section-{s.index}"
         lines.append(f"### [{s.start_timestamp}] - {s.title} <a id='{anchor}'></a>")
         lines.append("")
         lines.append(s.transcript)
@@ -43,15 +43,15 @@ def to_markdown(result) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Distill - CLI")
-    parser.add_argument("url", help="URL del video YouTube")
+    parser.add_argument("url", help="YouTube video URL")
     parser.add_argument(
-        "--out", type=Path, default=None, help="File di output (se omesso: stdout)"
+        "--out", type=Path, default=None, help="Output file (if omitted: stdout)"
     )
     parser.add_argument(
         "--format",
         choices=["json", "markdown"],
         default="json",
-        help="Formato di output",
+        help="Output format",
     )
     args = parser.parse_args()
 
@@ -64,7 +64,7 @@ def main() -> int:
 
     if args.out:
         args.out.write_text(payload, encoding="utf-8")
-        print(f"Scritto: {args.out}", file=sys.stderr)
+        print(f"Written: {args.out}", file=sys.stderr)
     else:
         print(payload)
 

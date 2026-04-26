@@ -1,4 +1,4 @@
-"""Configurazione centralizzata, caricata da variabili d'ambiente / .env"""
+"""Centralized configuration, loaded from environment variables / .env."""
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -7,11 +7,11 @@ class Settings(BaseSettings):
 
     groq_api_key: str
     groq_model: str = "llama-3.3-70b-versatile"
-    openai_api_key: str = ""  # usato solo dal fallback Whisper (opzionale)
+    openai_api_key: str = ""  # only used by the Whisper fallback (optional)
     enable_whisper_fallback: bool = True
     preferred_languages: str = "it,en"
     cors_origins: str = "http://localhost:5173"
-    cache_ttl_days: int = 7  # 0 = nessuna scadenza
+    cache_ttl_days: int = 7  # 0 = no expiration
 
     @property
     def preferred_languages_list(self) -> list[str]:
@@ -22,5 +22,5 @@ class Settings(BaseSettings):
         return [x.strip() for x in self.cors_origins.split(",") if x.strip()]
 
 
-# Instance-singleton — importalo dagli altri moduli
+# Singleton instance — import it from other modules
 settings = Settings()  # type: ignore[call-arg]

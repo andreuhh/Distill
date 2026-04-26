@@ -1,11 +1,11 @@
-"""Service che produce la trascrizione segmentata a partire da un video_id.
+"""Service that produces a segmented transcript from a video_id.
 
-Strategia:
-1) youtube-transcript-api (rapido, gratis, con timestamp nativi YouTube)
-2) FALLBACK: yt-dlp per scaricare l'audio + Whisper (OpenAI API) per trascrivere
-   con timestamp a livello di segmento.
+Strategy:
+1) youtube-transcript-api (fast, free, with native YouTube timestamps)
+2) FALLBACK: yt-dlp to download the audio + Whisper (OpenAI API) to transcribe
+   with segment-level timestamps.
 
-Se entrambe falliscono, solleva TranscriptError.
+If both fail, raises TranscriptError.
 """
 from __future__ import annotations
 
@@ -21,26 +21,26 @@ logger = logging.getLogger(__name__)
 
 
 class TranscriptError(RuntimeError):
-    """Errore unificato del servizio trascrizione."""
+    """Unified error for the transcript service."""
 
 
-# ----------------------- Strategia 1: YouTube captions -----------------------
+# ----------------------- Strategy 1: YouTube captions -----------------------
 
 def _fetch_from_youtube_captions(video_id: str, preferred_languages: Iterable[str]) -> Transcript:
-    """Usa youtube-transcript-api. Ritorna Transcript o solleva eccezione."""
+    """Use youtube-transcript-api. Returns a Transcript or raises an exception."""
     from youtube_transcript_api import YouTubeTranscriptApi  # type: ignore
 
     preferred = list(preferred_languages)
 
     try:
-        # 0.7.x+: API instance-based con .list(); 0.6.x usava .list_transcripts()
+        # 0.7.x+: instance-based API with .list(); 0.6.x used .list_transcripts()
         ytt = YouTubeTranscriptApi()
         transcripts = ytt.list(video_id)
     except Exception as e:  # noqa: BLE001
-        raise TranscriptError(f"YouTube captions non disponibili: {e}") from e
+        raise TranscriptError(f"YouTube captions not available: {e}") from e
 
-    # Proviamo prima i sottotitoli manuali nelle lingue preferite,
-    # poi quelli auto-generati, poi qualunque cosa.
+    # Try manual subtitles in preferred languages first,
+    # then auto-generated ones, then anything available.
     transcript_obj = None
     try:
         transcript_obj = transcripts.find_manually_created_transcript(preferred)
@@ -48,20 +48,20 @@ def _fetch_from_youtube_captions(video_id: str, preferred_languages: Iterable[st
         try:
             transcript_obj = transcripts.find_generated_transcript(preferred)
         except Exception:
-            # fallback: prima disponibile
+            # fallback: first available
             try:
                 transcript_obj = next(iter(transcripts))
             except StopIteration as e:
-                raise TranscriptError("Nessuna lingua disponibile") from e
+                raise TranscriptError("No language available") from e
 
     try:
         raw = transcript_obj.fetch()
     except Exception as e:  # noqa: BLE001
-        raise TranscriptError(f"Errore nel fetch dei sottotitoli: {e}") from e
+        raise TranscriptError(f"Error fetching subtitles: {e}") from e
 
     segments: list[TranscriptSegment] = []
     for item in raw:
-        # 0.6.x ritorna dict, 0.7.x+ ritorna oggetti con attributi
+        # 0.6.x returns dicts, 0.7.x+ returns objects with attributes
         if isinstance(item, dict):
             text = (item.get("text") or "").strip()
             start = float(item.get("start", 0.0))
@@ -77,7 +77,7 @@ def _fetch_from_youtube_captions(video_id: str, preferred_languages: Iterable[st
         )
 
     if not segments:
-        raise TranscriptError("Sottotitoli presenti ma vuoti")
+        raise TranscriptError("Subtitles present but empty")
 
     return Transcript(
         video_id=video_id,
@@ -87,10 +87,10 @@ def _fetch_from_youtube_captions(video_id: str, preferred_languages: Iterable[st
     )
 
 
-# ----------------------- Strategia 2: Whisper fallback -----------------------
+# ----------------------- Strategy 2: Whisper fallback -----------------------
 
 def _download_audio(video_id: str, out_dir: Path) -> Path:
-    """Scarica la traccia audio (bestaudio) come m4a con yt-dlp."""
+    """Download the audio track (bestaudio) as m4a using yt-dlp."""
     from yt_dlp import YoutubeDL  # type: ignore
 
     out_template = str(out_dir / f"{video_id}.%(ext)s")
@@ -100,24 +100,24 @@ def _download_audio(video_id: str, out_dir: Path) -> Path:
         "quiet": True,
         "no_warnings": True,
         "noprogress": True,
-        # non facciamo postprocess: Whisper accetta m4a/webm/opus senza problemi
+        # no postprocessing: Whisper accepts m4a/webm/opus without issues
     }
     url = f"https://www.youtube.com/watch?v={video_id}"
     with YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
     filename = Path(ydl.prepare_filename(info))
     if not filename.exists():
-        # a volte l'estensione finale cambia: prendiamo il primo file nella dir
+        # the final extension sometimes changes: pick the first file in the dir
         matches = list(out_dir.glob(f"{video_id}.*"))
         if not matches:
-            raise TranscriptError("yt-dlp non ha prodotto file audio")
+            raise TranscriptError("yt-dlp did not produce an audio file")
         filename = matches[0]
     return filename
 
 
 def _fetch_from_whisper(video_id: str) -> Transcript:
-    """Scarica audio e lo trascrive con Whisper API in modalita 'verbose_json'
-    per avere i segmenti con timestamp."""
+    """Download audio and transcribe it with the Whisper API in 'verbose_json' mode
+    to get segments with timestamps."""
     from openai import OpenAI  # type: ignore
 
     client = OpenAI(api_key=settings.openai_api_key)
@@ -125,18 +125,18 @@ def _fetch_from_whisper(video_id: str) -> Transcript:
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
         audio_path = _download_audio(video_id, tmp_path)
-        logger.info("Audio scaricato in %s (%.1f MB)", audio_path, audio_path.stat().st_size / 1e6)
+        logger.info("Audio downloaded to %s (%.1f MB)", audio_path, audio_path.stat().st_size / 1e6)
 
         with audio_path.open("rb") as f:
-            # response_format=verbose_json ci da .segments con start/end
+            # response_format=verbose_json gives us .segments with start/end
             response = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=f,
                 response_format="verbose_json",
-                # lasciamo che Whisper auto-detect la lingua
+                # let Whisper auto-detect the language
             )
 
-    # L'SDK Python ritorna un oggetto con attributi (o dict); gestiamo entrambi
+    # The Python SDK returns an object with attributes (or dict); handle both
     def _get(obj, key, default=None):
         if isinstance(obj, dict):
             return obj.get(key, default)
@@ -155,7 +155,7 @@ def _fetch_from_whisper(video_id: str) -> Transcript:
         segments.append(TranscriptSegment(text=text, start=start, duration=max(0.0, end - start)))
 
     if not segments:
-        raise TranscriptError("Whisper non ha prodotto segmenti")
+        raise TranscriptError("Whisper did not produce any segments")
 
     return Transcript(
         video_id=video_id,
@@ -168,23 +168,23 @@ def _fetch_from_whisper(video_id: str) -> Transcript:
 # ----------------------- Public API -----------------------
 
 def get_transcript(video_id: str) -> Transcript:
-    """Ritorna la trascrizione segmentata provando prima i captions YouTube,
-    poi Whisper (se abilitato)."""
+    """Return the segmented transcript, trying YouTube captions first,
+    then Whisper (if enabled)."""
     errors: list[str] = []
 
     try:
         return _fetch_from_youtube_captions(video_id, settings.preferred_languages_list)
     except Exception as e:  # noqa: BLE001
-        logger.warning("Captions YouTube falliti per %s: %s", video_id, e)
+        logger.warning("YouTube captions failed for %s: %s", video_id, e)
         errors.append(f"captions: {e}")
 
     if settings.enable_whisper_fallback:
         try:
             return _fetch_from_whisper(video_id)
         except Exception as e:  # noqa: BLE001
-            logger.warning("Whisper fallback fallito per %s: %s", video_id, e)
+            logger.warning("Whisper fallback failed for %s: %s", video_id, e)
             errors.append(f"whisper: {e}")
 
     raise TranscriptError(
-        "Impossibile ottenere la trascrizione. Dettagli: " + " | ".join(errors)
+        "Unable to obtain the transcript. Details: " + " | ".join(errors)
     )

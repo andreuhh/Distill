@@ -1,11 +1,11 @@
 /**
- * Indice navigabile: click sulla sezione -> seek del player al timestamp.
+ * Navigable table of contents: click on a section -> seek the player to its timestamp.
  */
 export default function TOC({ sections, onJump, activeIndex }) {
   if (!sections || sections.length === 0) return null
   return (
     <nav className="bg-white rounded-lg border border-slate-200 p-4 sticky top-4">
-      <h3 className="text-sm uppercase tracking-wide text-slate-500 mb-3">Indice</h3>
+      <h3 className="text-sm uppercase tracking-wide text-slate-500 mb-3">Contents</h3>
       <ul className="space-y-1">
         {sections.map((s) => (
           <li key={s.index}>

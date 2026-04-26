@@ -1,22 +1,22 @@
-"""Utility per parsing di URL YouTube e formattazione timestamp."""
+"""Utility for parsing YouTube URLs and formatting timestamps."""
 from __future__ import annotations
 
 import re
 from urllib.parse import parse_qs, urlparse
 
 
-# Pattern per estrarre l'ID video da varie forme di URL YouTube
+# Pattern to extract the video ID from various YouTube URL forms
 _ID_PATTERNS = [
-    re.compile(r"^[A-Za-z0-9_-]{11}$"),  # ID diretto
+    re.compile(r"^[A-Za-z0-9_-]{11}$"),  # Direct ID
 ]
 
 
 def extract_video_id(url: str) -> str:
-    """Ritorna l'ID di 11 caratteri dal link YouTube.
-    Supporta watch?v=, youtu.be/, embed/, shorts/."""
+    """Return the 11-character ID from a YouTube link.
+    Supports watch?v=, youtu.be/, embed/, shorts/."""
     url = url.strip()
 
-    # Se l'utente ha passato direttamente l'id
+    # If the user passed the ID directly
     if _ID_PATTERNS[0].match(url):
         return url
 
@@ -35,16 +35,16 @@ def extract_video_id(url: str) -> str:
             v = parse_qs(parsed.query).get("v", [None])[0]
             if v and _ID_PATTERNS[0].match(v):
                 return v
-        # /embed/<id> o /shorts/<id> o /v/<id>
+        # /embed/<id> or /shorts/<id> or /v/<id>
         m = re.match(r"^/(embed|shorts|v)/([A-Za-z0-9_-]{11})", parsed.path)
         if m:
             return m.group(2)
 
-    raise ValueError(f"Impossibile estrarre l'ID video da: {url!r}")
+    raise ValueError(f"Unable to extract video ID from: {url!r}")
 
 
 def format_timestamp(seconds: float) -> str:
-    """Converte secondi in HH:MM:SS (o MM:SS se < 1h)."""
+    """Convert seconds to HH:MM:SS (or MM:SS if < 1h)."""
     total = int(round(seconds))
     h, rem = divmod(total, 3600)
     m, s = divmod(rem, 60)
@@ -54,7 +54,7 @@ def format_timestamp(seconds: float) -> str:
 
 
 def youtube_watch_url(video_id: str, start_seconds: float | None = None) -> str:
-    """Costruisce l'URL canonico con eventuale &t=<sec>s."""
+    """Build the canonical URL with an optional &t=<sec>s parameter."""
     base = f"https://www.youtube.com/watch?v={video_id}"
     if start_seconds is not None:
         return f"{base}&t={int(start_seconds)}s"

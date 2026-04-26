@@ -1,5 +1,5 @@
-"""Orchestrazione della pipeline end-to-end: URL -> ProcessResult.
-Centralizza la logica qui per riusarla sia dall'API sia dalla CLI.
+"""End-to-end pipeline orchestration: URL -> ProcessResult.
+Centralises the logic here to reuse it from both the API and the CLI.
 """
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ def run_pipeline(url: str) -> ProcessResult:
 
     transcript = get_transcript(video_id)
     logger.info(
-        "Trascrizione ottenuta: source=%s lang=%s segments=%d",
+        "Transcript obtained: source=%s lang=%s segments=%d",
         transcript.source,
         transcript.language,
         len(transcript.segments),

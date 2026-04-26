@@ -15,7 +15,7 @@ export default function VideoForm({ onSubmit, loading }) {
         type="url"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
-        placeholder="Incolla l'URL di un video YouTube"
+        placeholder="Paste a YouTube video URL"
         className="flex-1 px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         disabled={loading}
         required
@@ -25,7 +25,7 @@ export default function VideoForm({ onSubmit, loading }) {
         disabled={loading}
         className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 disabled:opacity-50"
       >
-        {loading ? 'Analisi in corso...' : 'Analizza'}
+        {loading ? 'Analyzing...' : 'Analyze'}
       </button>
     </form>
   )

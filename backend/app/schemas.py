@@ -1,9 +1,9 @@
-"""Modelli Pydantic condivisi tra layer.
+"""Pydantic models shared across layers.
 
-I modelli 'LLM*' sono quelli che chiediamo all'LLM via structured output:
-li teniamo piccoli e guidati, per massimizzare la qualita dell'output.
-I modelli 'Section', 'ProcessResult' sono quelli che poi esponiamo via API:
-contengono i dati arricchiti col post-processing (timestamp reale, testo completo).
+The 'LLM*' models are those we request from the LLM via structured output:
+we keep them small and constrained to maximise output quality.
+The 'Section' and 'ProcessResult' models are those exposed via API:
+they contain data enriched by post-processing (real timestamp, full text).
 """
 from __future__ import annotations
 
@@ -12,10 +12,10 @@ from urllib.parse import urlparse
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 
-# ---------- Input API ----------
+# ---------- API Input ----------
 
-# Guardrail L1: domini consentiti per l'URL in ingresso.
-# Solo host ufficiali YouTube. Tutto il resto viene rifiutato alla validazione.
+# Guardrail L1: allowed domains for the input URL.
+# Only official YouTube hosts. Everything else is rejected at validation.
 _ALLOWED_YOUTUBE_HOSTS = {
     "youtube.com",
     "www.youtube.com",
@@ -26,38 +26,38 @@ _ALLOWED_YOUTUBE_HOSTS = {
 
 
 class ProcessRequest(BaseModel):
-    url: HttpUrl = Field(..., description="URL del video YouTube")
+    url: HttpUrl = Field(..., description="YouTube video URL")
 
     @field_validator("url")
     @classmethod
     def must_be_youtube(cls, v: HttpUrl) -> HttpUrl:
-        """Rifiuta subito qualunque URL che non appartenga a un dominio YouTube.
-        Questo sposta la validazione dal livello 'pipeline' al livello 'schema':
-        se un utente passa https://evil.com, FastAPI risponde 422 ancora prima
-        di entrare nella logica di business.
+        """Reject any URL that does not belong to a YouTube domain.
+        This moves validation from the 'pipeline' layer to the 'schema' layer:
+        if a user passes https://evil.com, FastAPI responds 422 before
+        entering business logic.
         """
         host = (urlparse(str(v)).hostname or "").lower()
         if host not in _ALLOWED_YOUTUBE_HOSTS:
             raise ValueError(
-                f"Dominio non supportato: {host!r}. "
-                f"Sono accettati solo URL YouTube ({', '.join(sorted(_ALLOWED_YOUTUBE_HOSTS))})."
+                f"Unsupported domain: {host!r}. "
+                f"Only YouTube URLs are accepted ({', '.join(sorted(_ALLOWED_YOUTUBE_HOSTS))})."
             )
         return v
 
 
-# ---------- Trascrizione (output del transcript service) ----------
+# ---------- Transcript (output of the transcript service) ----------
 
 class TranscriptSegment(BaseModel):
-    """Un frammento della trascrizione con timestamp nativo."""
+    """A transcript fragment with its native timestamp."""
     text: str
-    start: float  # secondi
-    duration: float  # secondi
+    start: float  # seconds
+    duration: float  # seconds
 
 
 class Transcript(BaseModel):
     video_id: str
     language: str
-    source: str  # "youtube-captions" oppure "whisper"
+    source: str  # "youtube-captions" or "whisper"
     segments: list[TranscriptSegment]
 
     @property
@@ -72,42 +72,42 @@ class Transcript(BaseModel):
         return last.start + last.duration
 
 
-# ---------- Output dell'LLM (structured output) ----------
+# ---------- LLM output (structured output) ----------
 
 class LLMSectionBoundary(BaseModel):
-    """Cosa chiediamo all'LLM: l'indice del segmento dove inizia la sezione
-    e un titolo breve. NIENTE timestamp inventati.
+    """What we ask the LLM: the segment index where a section starts
+    and a short title. NO invented timestamps.
     """
     start_segment_index: int = Field(
         ...,
         ge=0,
-        description="Indice (0-based) del segmento in cui inizia la sezione.",
+        description="0-based index of the segment where the section begins.",
     )
     title: str = Field(
         ...,
         min_length=3,
         max_length=120,
-        description="Titolo breve e descrittivo della sezione (max 10 parole).",
+        description="Short, descriptive section title (max 10 words).",
     )
 
 
 class LLMSectionPlan(BaseModel):
-    """Wrapper richiesto dallo structured output di LangChain."""
+    """Wrapper required by LangChain structured output."""
     sections: list[LLMSectionBoundary] = Field(
         ...,
         min_length=1,
-        description="Elenco ordinato delle sezioni, la prima deve avere start_segment_index=0.",
+        description="Ordered list of sections; the first must have start_segment_index=0.",
     )
 
 
-# ---------- Output finale API ----------
+# ---------- Final API output ----------
 
 class Section(BaseModel):
-    """Sezione post-processata: il timestamp viene SEMPRE dal segmento reale."""
+    """Post-processed section: the timestamp ALWAYS comes from the real segment."""
     index: int
     title: str
     start_seconds: float
-    start_timestamp: str  # es. "00:05:30"
+    start_timestamp: str  # e.g. "00:05:30"
     transcript: str
 
 

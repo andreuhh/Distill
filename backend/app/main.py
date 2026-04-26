@@ -18,8 +18,8 @@ app = FastAPI(
     title="Distill",
     version="0.1.0",
     description=(
-        "Sistema che trasforma un video YouTube in una trascrizione "
-        "strutturata in sezioni con titolo e timestamp."
+        "System that transforms a YouTube video into a transcript "
+        "structured into sections with title and timestamp."
     ),
 )
 

@@ -1,4 +1,4 @@
-"""Router FastAPI: endpoint POST /api/process."""
+"""FastAPI router: POST /api/process endpoint."""
 from __future__ import annotations
 
 import logging
@@ -19,10 +19,10 @@ def process(req: ProcessRequest) -> ProcessResult:
     try:
         return run_pipeline(str(req.url))
     except ValueError as e:
-        # URL non valido
+        # Invalid URL
         raise HTTPException(status_code=400, detail=str(e)) from e
     except TranscriptError as e:
-        raise HTTPException(status_code=422, detail=f"Trascrizione non disponibile: {e}") from e
+        raise HTTPException(status_code=422, detail=f"Transcript not available: {e}") from e
     except Exception as e:  # noqa: BLE001
-        logger.exception("Errore pipeline")
-        raise HTTPException(status_code=500, detail=f"Errore interno: {e}") from e
+        logger.exception("Pipeline error")
+        raise HTTPException(status_code=500, detail=f"Internal error: {e}") from e

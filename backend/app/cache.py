@@ -1,11 +1,11 @@
-"""Cache file-based per i risultati della pipeline.
+"""File-based cache for pipeline results.
 
-Ogni risultato è salvato come backend/cache/<video_id>.json.
-La cache è best-effort: errori di lettura/scrittura vengono loggati
-e ignorati, così non rompono mai il flusso principale.
+Each result is saved as backend/cache/<video_id>.json.
+The cache is best-effort: read/write errors are logged and ignored,
+so they never break the main flow.
 
-Chiave di cache: video_id (stesso URL → stesso video_id → stesso risultato).
-TTL: configurabile via CACHE_TTL_DAYS nel .env (0 = nessuna scadenza).
+Cache key: video_id (same URL → same video_id → same result).
+TTL: configurable via CACHE_TTL_DAYS in .env (0 = no expiration).
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ def _path(video_id: str) -> Path:
 
 
 def get(video_id: str, ttl_days: int) -> ProcessResult | None:
-    """Ritorna il ProcessResult cachato, o None se assente o scaduto."""
+    """Return the cached ProcessResult, or None if absent or expired."""
     path = _path(video_id)
     if not path.exists():
         return None
@@ -36,17 +36,17 @@ def get(video_id: str, ttl_days: int) -> ProcessResult | None:
             cached_at = datetime.fromisoformat(data["cached_at"])
             if datetime.now() - cached_at > timedelta(days=ttl_days):
                 path.unlink(missing_ok=True)
-                logger.info("Cache scaduta per %s", video_id)
+                logger.info("Cache expired for %s", video_id)
                 return None
-        logger.info("Cache hit per %s", video_id)
+        logger.info("Cache hit for %s", video_id)
         return ProcessResult.model_validate(data["result"])
     except Exception as e:  # noqa: BLE001
-        logger.warning("Errore lettura cache per %s: %s", video_id, e)
+        logger.warning("Cache read error for %s: %s", video_id, e)
         return None
 
 
 def set(video_id: str, result: ProcessResult) -> None:
-    """Salva il risultato nella cache. Fallisce silenziosamente."""
+    """Save the result to the cache. Fails silently."""
     try:
         _CACHE_DIR.mkdir(exist_ok=True)
         data = {
@@ -56,6 +56,6 @@ def set(video_id: str, result: ProcessResult) -> None:
         _path(video_id).write_text(
             json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
         )
-        logger.info("Cache salvata per %s", video_id)
+        logger.info("Cache saved for %s", video_id)
     except Exception as e:  # noqa: BLE001
-        logger.warning("Errore scrittura cache per %s: %s", video_id, e)
+        logger.warning("Cache write error for %s: %s", video_id, e)
