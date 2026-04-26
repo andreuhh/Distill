@@ -22,11 +22,12 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+.claude/
 
-# Output di esempio (opzionale)
+# Output example
 esempio_output.*
 
-# Cache risultati pipeline
+# Cache pipeline results
 backend/cache/
 
 # Logs
