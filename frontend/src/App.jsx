@@ -10,6 +10,7 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [activeIndex, setActiveIndex] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const playerRef = useRef(null)
 
@@ -17,6 +18,7 @@ export default function App() {
     setLoading(true)
     setError(null)
     setActiveIndex(null)
+    setSearchQuery('')
     try {
       const data = await processVideo(url)
       setResult(data)
@@ -37,6 +39,15 @@ export default function App() {
     const el = document.getElementById(`section-${section.index}`)
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
+
+  const filteredSections = result
+    ? searchQuery.trim()
+      ? result.sections.filter((s) => {
+          const q = searchQuery.toLowerCase()
+          return s.title.toLowerCase().includes(q) || s.transcript.toLowerCase().includes(q)
+        })
+      : result.sections
+    : []
 
   return (
     <div className="min-h-full">
@@ -65,31 +76,55 @@ export default function App() {
         )}
 
         {result && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Left column: TOC */}
-            <aside className="md:col-span-1">
-              <TOC
-                sections={result.sections}
-                onJump={handleJump}
-                activeIndex={activeIndex}
+          <div className="space-y-4">
+            {/* Search bar */}
+            <div className="flex items-center gap-3">
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search in sections…"
+                className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-            </aside>
+              {searchQuery && (
+                <span className="text-xs text-slate-500 shrink-0">
+                  {filteredSections.length} / {result.sections.length} sections
+                </span>
+              )}
+            </div>
 
-            {/* Right column: player + sections */}
-            <section className="md:col-span-2 space-y-4">
-              <VideoPlayer ref={playerRef} videoId={result.video.video_id} />
-              <div className="text-xs text-slate-500">
-                Transcript source: <code>{result.video.transcript_source}</code>
-                {' — '}language: <code>{result.video.language}</code>
-                {' — '}duration: {Math.round(result.video.total_duration_seconds)}s
-                {' — '}{result.sections.length} sections
-              </div>
-              <SectionsList
-                sections={result.sections}
-                onJump={handleJump}
-                activeIndex={activeIndex}
-              />
-            </section>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Left column: TOC */}
+              <aside className="md:col-span-1">
+                <TOC
+                  sections={filteredSections}
+                  onJump={handleJump}
+                  activeIndex={activeIndex}
+                />
+              </aside>
+
+              {/* Right column: player + sections */}
+              <section className="md:col-span-2 space-y-4">
+                <VideoPlayer ref={playerRef} videoId={result.video.video_id} />
+                <div className="text-xs text-slate-500">
+                  Transcript source: <code>{result.video.transcript_source}</code>
+                  {' — '}language: <code>{result.video.language}</code>
+                  {' — '}duration: {Math.round(result.video.total_duration_seconds)}s
+                  {' — '}{result.sections.length} sections
+                </div>
+                <SectionsList
+                  sections={filteredSections}
+                  onJump={handleJump}
+                  activeIndex={activeIndex}
+                  searchQuery={searchQuery}
+                />
+                {filteredSections.length === 0 && searchQuery && (
+                  <p className="text-slate-400 text-sm text-center py-6">
+                    No sections match &ldquo;{searchQuery}&rdquo;
+                  </p>
+                )}
+              </section>
+            </div>
           </div>
         )}
       </main>
