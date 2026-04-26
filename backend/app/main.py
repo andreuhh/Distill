@@ -15,7 +15,7 @@ logging.basicConfig(
 )
 
 app = FastAPI(
-    title="YouTube Section AI",
+    title="Distill",
     version="0.1.0",
     description=(
         "Sistema che trasforma un video YouTube in una trascrizione "

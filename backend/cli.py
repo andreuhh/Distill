@@ -42,7 +42,7 @@ def to_markdown(result) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="YouTube Section AI - CLI")
+    parser = argparse.ArgumentParser(description="Distill - CLI")
     parser.add_argument("url", help="URL del video YouTube")
     parser.add_argument(
         "--out", type=Path, default=None, help="File di output (se omesso: stdout)"

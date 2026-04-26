@@ -1,4 +1,4 @@
-# Frontend — YouTube Section AI
+# Frontend — Distill
 
 React + Vite + Tailwind. In dev fa proxy di `/api` -> `http://localhost:8000`
 (vedi `vite.config.js`), quindi basta avviare il backend e poi:

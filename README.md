@@ -1,4 +1,4 @@
-# YouTube Section AI
+# Distill
 
 Sistema che trasforma un video YouTube in una **trascrizione strutturata in sezioni**
 (titolo + timestamp di inizio + testo), navigabile da interfaccia web.
@@ -58,6 +58,7 @@ python cli.py "https://www.youtube.com/watch?v=_o4KusDr-Kg" --out ./esempio_outp
 
 ## Chiavi API necessarie
 Inserire in `backend/.env`:
+- `GROQ_API_KEY` - obbligatoria
 - `OPENAI_API_KEY` — obbligatoria, usata per GPT-4o-mini e (se fallback) Whisper API
 
 ## Deliverable

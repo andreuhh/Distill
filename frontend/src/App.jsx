@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
 import { processVideo } from './api.js'
+import SectionsList from './components/SectionsList.jsx'
+import TOC from './components/TOC.jsx'
 import VideoForm from './components/VideoForm.jsx'
 import VideoPlayer from './components/VideoPlayer.jsx'
-import TOC from './components/TOC.jsx'
-import SectionsList from './components/SectionsList.jsx'
 
 export default function App() {
   const [result, setResult] = useState(null)
@@ -42,7 +42,7 @@ export default function App() {
     <div className="min-h-full">
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-slate-900">YouTube Section AI</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Distill</h1>
           <p className="text-sm text-slate-500">
             Trasforma un video in trascrizione strutturata con titoli e timestamp
           </p>

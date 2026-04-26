@@ -1,4 +1,4 @@
-# Report — YouTube Section AI
+# Report — Distill
 
 ## Obiettivo
 Dato un URL di un video YouTube, produrre una trascrizione strutturata in
