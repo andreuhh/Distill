@@ -1,0 +1,17 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+python-dotenv==1.0.1
+pydantic==2.12.3
+pydantic-settings==2.9.1
+
+# LangChain + Groq
+langchain==0.3.7
+langchain-groq==0.2.3
+langchain-core==0.3.29
+
+# YouTube
+youtube-transcript-api>=0.7.0
+yt-dlp==2024.10.22
+
+# Utils
+tenacity==9.0.0
