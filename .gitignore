@@ -33,3 +33,6 @@ backend/cache/
 # Logs
 *.log
 npm-debug.log*
+
+#recap
+recap.md
