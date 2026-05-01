@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const SESSION_VIDEO = {
   thumbnailUrl: 'https://img.youtube.com/vi/kCc8FmEb1nY/maxresdefault.jpg',
@@ -147,6 +147,18 @@ function useQuizPhaseDemoLoop() {
   const skipQuiz = () => setPhase(QuizPhase.RESUMED)
 
   return { phase, countdown, selectedOptionId, selectOption, skipQuiz }
+}
+
+function useAutoScrollToBottom(trigger) {
+  const ref = useRef(null)
+  useEffect(() => {
+    if (!ref.current) return
+    ref.current.scrollTo({
+      top: ref.current.scrollHeight,
+      behavior: 'smooth',
+    })
+  }, [trigger])
+  return ref
 }
 
 export default function CoWatcherSpeakerWireframe() {
@@ -436,8 +448,9 @@ function EventsCountTag({ count }) {
 
 function CoPilotEventTimeline({ previousEvents, quiz, quizState }) {
   const isQuizActive = isQuizActivePhase(quizState.phase)
+  const scrollRef = useAutoScrollToBottom(quizState.phase)
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
       <div
         className={`space-y-2 transition-opacity duration-500 ${
           isQuizActive ? 'opacity-50' : 'opacity-100'
