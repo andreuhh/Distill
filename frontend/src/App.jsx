@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { processVideo } from './api.js'
+import { processVideo } from './services/api.js'
 import SectionsList from './components/SectionsList.jsx'
 import TOC from './components/TOC.jsx'
 import VideoForm from './components/VideoForm.jsx'

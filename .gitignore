@@ -35,6 +35,5 @@ backend/cache/
 npm-debug.log*
 
 #recap
-recap.md
-
+RECAP-1.md
 REPORT.md   
